@@ -1,0 +1,12 @@
+rpm = 3400
+VE = 0.75
+AF = 18.5
+ambient = 25 #c
+elevation = 000 #ft
+boost = 34. #psi
+coolantTemp = 27 #c
+pDrop = 1.0 #psi
+bore = 96 #mm 1kz,96 ; dt466,109
+stroke = 103#mm 1kz,103 ; dt466,136
+cylinders = 4
+fuel = 0.37 #lb/HP/hr
