@@ -3,21 +3,25 @@ import ht
 import fluids
 import thermo
 import variables as var
-#PN INT000203
-x1 = 4.5
-y1 = 10.0
-z1 = 9
 
-#PN INT000219
-x2 = 3.75
-y2 = 4.5
-z2 = 9.75
+'''
+    #PN INT000203
 
-x = x1
-y = y1
-z = z1
+    x1 = 4.5
+    y1 = 10.0
+    z1 = 9
 
-def get_Tout(T, flow, rho):
+    #PN INT000219
+    x2 = 3.75
+    y2 = 4.5
+    z2 = 9.75
+
+    x = x1
+    y = y1
+    z = z1
+    '''
+
+def get_Tout(T, flow, rho, x, y, z, Ctemp):
     coreHeight = x * 25.4/1000 #all dims in meters
     coreWidth = y * 25.4/1000 #coolant tank to tank
     coreThickness = z * 25.4/1000
@@ -44,7 +48,7 @@ def get_Tout(T, flow, rho):
     ##coolant to 50-50 glycol/water
 
     tempAir = T-273.0 # Celsius
-    tempCoolant = var.coolantTemp # Celsius
+    tempCoolant = Ctemp # Celsius
 
     percentGlycol = .5
     Coolant = thermo.Mixture(['water', 'glycol'], Vfls=[1-percentGlycol, percentGlycol], T= 273+tempCoolant, P=2E5)
@@ -113,10 +117,11 @@ def get_Tout(T, flow, rho):
     Tout = NTU['Tho'] + 273 #kelvin
     Pwr = NTU['Q'] / 1000 #kW
     TCout = NTU['Tco']
+
     #output = [Tout, flowrateAir2]
 
 
-    return Tout, Pwr
+    return Tout, Pwr, TCout
 
 '''
 

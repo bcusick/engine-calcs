@@ -11,7 +11,7 @@ import pandas as pd
 from scipy import interpolate
 
 import time
-start = int(round(time.time() * 1000))
+
 
 
 def psi_to_Pa(P):
@@ -73,24 +73,42 @@ Pman = Pabs - psi_to_Pa(var.pDrop) # est. pressure drop thru intercooler/piping
 eta = .7 #compressor effieciency
 #temp and density out of compressor
 Tturbo = fluids.isentropic_T_rise_compression(P1=Patm, P2=Pabs, T1=ambient, k=k, eta=eta)
+
+Tcooler1 = Tturbo
+Tcooler2 = Tturbo
+Pcooler1 = 0
+Pcooler2 = 0
+
 D2 = air_density_calc(T=Tturbo, P=Pabs)
+D3 = air_density_calc(T=Tcooler2, P=Pman) #density at engine
+massflowAir = flowVol * D3 #kg/s, mass flow into 2nd cooler
 
-#loop intercooler calcs since flowrate influences Tout from intercooler
-Tcooler = Tturbo
+#loop intercooler calcs since flowrate influences Tout from intercooler (this is cooled from radiator)
+Tcooler1 = Tturbo
+Tcooler2 = Tturbo
 Told = 0
-while math.fabs(Tcooler-Told) >1E-10:
-    Told = Tcooler
-    print Tcooler-273
-    D3 = air_density_calc(T=Tcooler, P=Pman) #density at engine
-    massflowAir = flowVol * D3 #kg/s, mass flow into engine
-    #print massflowAir*3600.
-    Tcooler, Pcooler = cooler.get_Tout(Tturbo, massflowAir, D2)
+while math.fabs(Tcooler2-Told) >1E-10:
+    Told = Tcooler2
+    print Tcooler1-273
+    print Tcooler2-273
 
-coolerEff = (Tturbo - Tcooler)/ (Tturbo - ambient)
+    D3 = air_density_calc(T=Tcooler2, P=Pman) #density at engine
+    massflowAir = flowVol * D3 #kg/s, mass flow into 2nd cooler
+    #print massflowAir*3600.
+    Tcooler1, Pcooler1, Tco1 = cooler.get_Tout(Tturbo, massflowAir, D2, 4.5, 10.0, 4.5, var.coolantTemp)
+    Tcooler2, Pcooler2, Tco2 = cooler.get_Tout(Tcooler1, massflowAir, D2, 4.5, 10.0, 4.5, var.intCoolTemp)
+    #print Tco2
+
+
+
+coolerEff = (Tturbo - Tcooler2)/ (Tturbo - ambient)
 
 #How much fuel can I add to available air
 air_fuel=var.AF
 massflowFuel = massflowAir/air_fuel
+
+massflowAirNoTurbo = flowVol * D1
+massflowFuelNoTurbo = massflowAirNoTurbo/air_fuel
 
 massflowAirNoCooler = flowVol *D2
 massflowFuelNoCooler = massflowAirNoCooler/air_fuel
@@ -99,6 +117,7 @@ massflowFuelNoCooler = massflowAirNoCooler/air_fuel
 power= massflowFuel/specFuel #watts
 power= power/750 #HP
 torque = power*5252/revs
+powerNoTurbo = massflowFuelNoTurbo/specFuel/750
 powerNoCooler = massflowFuelNoCooler/specFuel/750
 
 CFM_engine = flowVol * (3.281**3) * 60 #convert from SI back to CFM
@@ -106,10 +125,10 @@ CFM_cooler = CFM_engine *D3/D2
 CFM_filter = CFM_engine *D3/D1
 
 Data = {'Power':power, 'CFM_engine':CFM_engine, 'CFM_cooler':CFM_cooler, 'CFM_filter':CFM_filter,
-        'Turbo Temp':Tturbo-273, 'Cooler Temp':Tcooler-273, 'Cooler Eff': coolerEff, 'Torque': torque, 'Displacement': displacement*1E3}
+        'Turbo Temp':Tturbo-273, 'Cooler Temp':Tcooler2-273, 'Cooler Eff': coolerEff, 'Torque': torque, 'Displacement': displacement*1E3}
 print Data
+print 'Turbo Adds {0} HP'.format(round(powerNoCooler-powerNoTurbo))
 print 'Intercooler Adds {0} HP'.format(round(power-powerNoCooler))
-print 'Intercooler dumps {0} kW'.format(round(Pcooler))
+print 'Intercooler1 dumps {0} kW'.format(round(Pcooler1))
+print 'Intercooler2 dumps {0} kW'.format(round(Pcooler2))
 print D1, D2, D3
-end = int(round(time.time() * 1000))
-print end - start
