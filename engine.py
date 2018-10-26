@@ -81,6 +81,7 @@ Pcooler2 = 0
 
 D2 = air_density_calc(T=Tturbo, P=Pabs)
 D3 = air_density_calc(T=Tcooler2, P=Pman) #density at engine
+D4 = air_density_calc(T=800, P=Patm)
 massflowAir = flowVol * D3 #kg/s, mass flow into 2nd cooler
 
 #loop intercooler calcs since flowrate influences Tout from intercooler (this is cooled from radiator)
@@ -89,8 +90,8 @@ Tcooler2 = Tturbo
 Told = 0
 while math.fabs(Tcooler2-Told) >1E-10:
     Told = Tcooler2
-    print Tcooler1-273
-    print Tcooler2-273
+    print (Tcooler1-273)
+    print (Tcooler2-273)
 
     D3 = air_density_calc(T=Tcooler2, P=Pman) #density at engine
     massflowAir = flowVol * D3 #kg/s, mass flow into 2nd cooler
@@ -123,12 +124,14 @@ powerNoCooler = massflowFuelNoCooler/specFuel/750
 CFM_engine = flowVol * (3.281**3) * 60 #convert from SI back to CFM
 CFM_cooler = CFM_engine *D3/D2
 CFM_filter = CFM_engine *D3/D1
+CFM_exhaust = CFM_engine *D3/D4
+print (f"exhaust flow = {CFM_exhaust}")
 
 Data = {'Power':power, 'CFM_engine':CFM_engine, 'CFM_cooler':CFM_cooler, 'CFM_filter':CFM_filter,
         'Turbo Temp':Tturbo-273, 'Cooler Temp':Tcooler2-273, 'Cooler Eff': coolerEff, 'Torque': torque, 'Displacement': displacement*1E3}
-print Data
-print 'Turbo Adds {0} HP'.format(round(powerNoCooler-powerNoTurbo))
-print 'Intercooler Adds {0} HP'.format(round(power-powerNoCooler))
-print 'Intercooler1 dumps {0} kW'.format(round(Pcooler1))
-print 'Intercooler2 dumps {0} kW'.format(round(Pcooler2))
-print D1, D2, D3
+print (Data)
+print (f"Turbo Adds {round(powerNoCooler-powerNoTurbo)} HP")
+print (f"Intercooler Adds {round(power-powerNoCooler)} HP")
+print (f"Intercooler1 dumps {round(Pcooler1)} kW")
+print (f"Intercooler2 dumps {round(Pcooler2)} kW")
+print (D1, D2, D3, D4)
